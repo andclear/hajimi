@@ -36,7 +36,7 @@ jobs:
           git checkout main # 切换到你 fork 的主分支
           # 尝试合并，如果遇到冲突，git merge 会失败，整个 Action 也会失败
           # 你可以根据需要选择 merge 策略，例如 --ff-only (只快进合并)
-          git merge upstream/main --no-edit # 替换 upstream/main 为上游仓库的主分支名，如 upstream/master
+          git merge upstream/main --allow-unrelated-histories --no-edit # 替换 upstream/main 为上游仓库的主分支名，如 upstream/master
           # --no-edit 避免在有合并提交时打开编辑器
 
       - name: Push Changes

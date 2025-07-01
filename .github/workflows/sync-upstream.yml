@@ -1,10 +1,8 @@
 name: Sync Fork
-
 on:
   schedule:
     - cron: '0 * * * *' # 每小时执行一次 (你可以根据需要调整频率，例如每天 '0 0 * * *')
   workflow_dispatch: # 允许手动触发
-
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -19,26 +17,26 @@ jobs:
           # 如果只是简单同步到非保护分支，默认的 GITHUB_TOKEN 也可以，但可能无法触发其他工作流
           ref: main # 检出你 fork 的主分支，根据你的实际情况修改
           # 如果你的 fork 主分支不是 main, 改成对应的，比如 master
-
       - name: Set up Git
         run: |
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-
       - name: Add Upstream Remote
         run: git remote add upstream https://github.com/wyeeeee/hajimi.git # 替换为原始仓库的 URL
-
       - name: Fetch Upstream
         run: git fetch upstream
-
       - name: Merge Upstream/main
         run: |
           git checkout main # 切换到你 fork 的主分支
-          # 尝试合并，如果遇到冲突，git merge 会失败，整个 Action 也会失败
-          # 你可以根据需要选择 merge 策略，例如 --ff-only (只快进合并)
+          set +e # 关闭命令失败即退出的选项
           git merge upstream/main --allow-unrelated-histories --no-edit # 替换 upstream/main 为上游仓库的主分支名，如 upstream/master
-          # --no-edit 避免在有合并提交时打开编辑器
-
+          MERGE_STATUS=$?
+          set -e # 恢复命令失败即退出的选项
+          if [ $MERGE_STATUS -ne 0 ]; then
+            echo "合并冲突发生，请手动解决。"
+            git status
+            exit 1
+          fi
       - name: Push Changes
         run: git push origin main # 推送到你 fork 的主分支
         # 如果你之前的操作是 rebase 而不是 merge，并且重写了历史，可能需要 --force-with-lease
